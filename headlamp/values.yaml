@@ -1,0 +1,7 @@
+config:
+  inCluster: true
+  inClusterContextName: main
+  baseURL: /headlamp
+
+  pluginsDir: /headlamp/plugins
+  sessionTTL: 86400

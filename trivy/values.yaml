@@ -1,0 +1,10 @@
+trivy:
+  ignoreUnfixed: true
+trivyOperator:
+  scanJobTolerations:
+    - operator: "Exists"
+      effect: "NoSchedule"
+nodeCollector:
+  tolerations:
+    - operator: "Exists"
+      effect: "NoSchedule"

@@ -1,0 +1,45 @@
+controller:
+  jenkinsUriPrefix: "/jenkins"
+
+  serviceType: ClusterIP
+  servicePort: 8080
+  targetPort: 8080
+
+  ingress:
+    enabled: false
+
+  numExecutors: 0
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+  installPlugins:
+    - kubernetes
+    - workflow-aggregator
+    - git
+    - configuration-as-code
+    - credentials-binding
+    - timestamper
+    - ws-cleanup
+
+  admin:
+    username: admin
+    createSecret: true
+
+persistence:
+  enabled: true
+  storageClass: longhorn
+  size: 10Gi
+  accessMode: ReadWriteOnce
+
+serviceAccount:
+  create: true
+  name: jenkins
+
+rbac:
+  create: true
