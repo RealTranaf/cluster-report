@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitlab-config
+  namespace: gitlab
+data:
+  GITLAB_OMNIBUS_CONFIG: |
+    external_url 'https://logging-test.vtcgame.vn/gitlab'
+
+    nginx['listen_port'] = 80
+    nginx['listen_https'] = false
+    letsencrypt['enable'] = false
+
+    gitlab_rails['gitlab_shell_ssh_port'] = 22
+
+    # OmniAuth
+    gitlab_rails['omniauth_enabled'] = true
+
+    gitlab_rails['omniauth_allow_single_sign_on'] = ['openid_connect']
+
+    gitlab_rails['omniauth_block_auto_created_users'] = false
+
+    gitlab_rails['omniauth_providers'] = [
+      {
+        name: 'openid_connect',
+        label: 'Keycloak',
+        args: {
+          name: 'openid_connect',
+          scope: ['openid', 'profile', 'email'],
+          response_type: 'code',
+          #prompt: 'login',
+          issuer: 'https://logging-test.vtcgame.vn/keycloak/realms/logging',
+          discovery: true,
+
+          client_auth_method: 'basic',
+          uid_field: 'preferred_username',
+          pkce: true,
+
+          client_options: {
+            identifier: 'gitlab',
+            secret: ENV.fetch('GITLAB_OIDC_CLIENT_SECRET'),
+            redirect_uri: 'https://logging-test.vtcgame.vn/gitlab/users/auth/openid_connect/callback'
+          }
+        }
+      }
+    ]
