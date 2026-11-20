@@ -1,0 +1,76 @@
+replicaCount: 1
+
+deployment:
+  env:
+    - name: USER_UID
+      value: "1000"
+    - name: USER_GID
+      value: "1000"
+
+service:
+  http:
+    type: ClusterIP
+    port: 3000
+  ssh:
+    type: ClusterIP
+    port: 22
+
+ingress:
+  enabled: false
+
+persistence:
+  enabled: true
+  create: true
+  mount: true
+  size: 10Gi
+  storageClass: longhorn
+
+postgresql-ha:
+  enabled: false
+
+postgresql:
+  enabled: true
+  global:
+    postgresql:
+      auth:
+        username: gitea
+        password: gitea
+        database: gitea
+  primary:
+    persistence:
+      enabled: true
+      storageClass: longhorn
+      size: 5Gi
+
+valkey-cluster:
+  enabled: false
+
+valkey:
+  enabled: true
+
+gitea:
+  config:
+    database:
+      DB_TYPE: postgres
+    server:
+      DOMAIN: logging-test.vtcgame.vn
+      ROOT_URL: https://logging-test.vtcgame.vn/gitea/
+      HTTP_PORT: 3000
+      PROTOCOL: http
+    service:
+      REQUIRE_SIGNIN_VIEW: false
+    actions:
+      ENABLED: false
+    cache:
+      ADAPTER: memory
+    session:
+      PROVIDER: memory
+    queue:
+      TYPE: level
+  admin:
+    username: gitea_admin
+    password: admin
+    email: admin@email.vn
+
+redis-cluster:
+  enabled: false

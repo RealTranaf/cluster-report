@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vso-headlamp
+  namespace: headlamp
+automountServiceAccountToken: false
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultConnection
+metadata:
+  name: vault-connection
+  namespace: headlamp
+spec:
+  address: http://vault.vault.svc.cluster.local:8200
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: headlamp-vault-auth
+  namespace: headlamp
+spec:
+  vaultConnectionRef: vault-connection
+  method: kubernetes
+  mount: kubernetes
+
+  kubernetes:
+    role: headlamp-vso
+    serviceAccount: vso-headlamp
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: headlamp-oidc
+  namespace: headlamp
+spec:
+  vaultAuthRef: headlamp-vault-auth
+
+  mount: secret
+  type: kv-v2
+  path: headlamp/oidc
+
+  refreshAfter: 60s
+
+  destination:
+    create: true
+    name: headlamp-oidc
+
+  hmacSecretData: true
+
+  rolloutRestartTargets:
+    - kind: Deployment
+      name: headlamp

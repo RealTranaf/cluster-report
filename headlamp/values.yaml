@@ -2,6 +2,27 @@ config:
   inCluster: true
   inClusterContextName: main
   baseURL: /headlamp
-
   pluginsDir: /headlamp/plugins
   sessionTTL: 86400
+
+  oidc:
+    clientID: headlamp
+    issuerURL: https://logging-test.vtcgame.vn/keycloak/realms/logging
+    scopes: "openid profile email"
+    autoLogin: false
+
+    secret:
+      create: false
+
+    externalSecret:
+      enabled: false
+
+  extraArgs:
+    - "-oidc-client-secret=$(OIDC_CLIENT_SECRET)"
+
+env:
+  - name: OIDC_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: headlamp-oidc
+        key: clientSecret

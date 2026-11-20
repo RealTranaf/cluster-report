@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  namespace: oauth2-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oauth2-proxy
+  template:
+    metadata:
+      labels:
+        app: oauth2-proxy
+    spec:
+      containers:
+        - name: oauth2-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.0
+          args:
+            - --http-address=0.0.0.0:4180
+            - --provider=keycloak-oidc
+            - --client-id=cluster-sso
+            - --oidc-issuer-url=https://logging-test.vtcgame.vn/keycloak/realms/logging
+            - --redirect-url=https://logging-test.vtcgame.vn/oauth2/callback
+            - --scope=openid email profile
+
+            - --email-domain=*
+            - --reverse-proxy=true
+            - --upstream=static://202
+
+            - --cookie-name=_oauth2_proxy
+            - --cookie-domain=logging-test.vtcgame.vn
+            - --cookie-path=/
+            - --cookie-secure=true
+            - --cookie-samesite=lax
+            - --cookie-expire=8h
+            - --cookie-refresh=1h
+
+            - --whitelist-domain=logging-test.vtcgame.vn
+            - --skip-provider-button=true
+            - --code-challenge-method=S256
+            - --set-xauthrequest=true
+
+            - --session-store-type=redis
+            - --redis-connection-url=redis://redis-cluster-master.database.svc.cluster.local:6379
+            - --redis-password=$(REDIS_PASSWORD)
+
+          env:
+            - name: OAUTH2_PROXY_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-proxy-secret
+                  key: client-secret
+
+            - name: OAUTH2_PROXY_COOKIE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-proxy-secret
+                  key: cookie-secret
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-proxy-redis
+                  key: redis-password
+          ports:
+            - name: http
+              containerPort: 4180
+
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 4180
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 4180
+            initialDelaySeconds: 15
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oauth2-proxy
+  namespace: oauth2-proxy
+spec:
+  type: ClusterIP
+  selector:
+    app: oauth2-proxy
+  ports:
+    - name: http
+      port: 4180
+      targetPort: 4180
